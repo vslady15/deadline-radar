@@ -1,12 +1,12 @@
 const CACHE_NAME = "deadline-radar-v1";
 const ASSETS = [
-  "/deadline-radar/",
-  "/deadline-radar/index.html",
-  "/deadline-radar/style.css",
-  "/deadline-radar/app.js",
-  "/deadline-radar/manifest.webmanifest",
-  "/deadline-radar/icons/icon-192.png",
-  "/deadline-radar/icons/icon-512.png"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./manifest.webmanifest",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
