@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Deadline Radar</title>
+  <meta name="description" content="Verpasse keine Fristen. Lokal, simpel, ohne Account." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="wrap">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">⏰</div>
+      <div>
+        <h1>Deadline Radar</h1>
+        <p class="sub">Fristen rein. Erinnerung raus. Alles lokal auf deinem Gerät.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap grid">
+    <section class="card">
+      <h2>Neue Frist</h2>
+
+      <form id="deadlineForm" autocomplete="off">
+        <label>
+          Titel
+          <input id="title" type="text" placeholder="z. B. Handyvertrag kündigen" maxlength="80" required />
+        </label>
+
+        <label>
+          Kategorie
+          <select id="category">
+            <option value="Vertrag">Vertrag</option>
+            <option value="Geld">Geld</option>
+            <option value="Recht">Recht</option>
+            <option value="Job">Job</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+        </label>
+
+        <div class="row">
+          <label>
+            Stichtag
+            <input id="dueDate" type="date" required />
+          </label>
+
+          <label>
+            Erinnerung (Tage vorher)
+            <input id="leadDays" type="number" min="0" max="365" value="7" />
+          </label>
+        </div>
+
+        <label>
+          Notiz (optional)
+          <textarea id="note" rows="3" placeholder="z. B. Kundennummer, Link, Ansprechpartner"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit">Frist speichern</button>
+          <button type="button" class="secondary" id="demoBtn">Demo-Daten</button>
+        </div>
+
+        <p class="hint">
+          Tipp: Du kannst später einen Kalender-Export machen (ICS), damit dein Handy dich erinnert.
+        </p>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="listHeader">
+        <h2>Deine Fristen</h2>
+        <div class="listActions">
+          <button type="button" class="secondary" id="exportIcsBtn">Alle als Kalender (ICS)</button>
+          <button type="button" class="danger" id="clearAllBtn">Alles löschen</button>
+        </div>
+      </div>
+
+      <div id="stats" class="stats" aria-live="polite"></div>
+      <div id="list" class="list" aria-live="polite"></div>
+
+      <details class="help">
+        <summary>Wie bekomme ich Erinnerungen aufs Handy?</summary>
+        <ol>
+          <li>Klicke „Alle als Kalender (ICS)“.</li>
+          <li>Öffne die heruntergeladene Datei auf dem Handy.</li>
+          <li>Bestätige „In Kalender importieren“.</li>
+        </ol>
+        <p class="hint">Die App speichert Daten nur lokal im Browser. Kein Server, kein Login.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <span>Made for zero-bullshit deadlines.</span>
+    <span class="muted">Speicherung: nur lokal (localStorage).</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
