@@ -114,7 +114,7 @@ function render() {
       ${it.note ? `<div class="note">${escapeHtml(it.note)}</div>` : ""}
 
       <div class="itemActions">
-        <button type="button" class="secondary" data-action="edit" data-id="${it.id}">Bearbeiten</button>
+        <button type="button" class="secondary" data-action="edit" data-id="${it.id}">Bearbeiten ✏️</button>
         <button type="button" class="secondary" data-action="ics" data-id="${it.id}">ICS</button>
         <button type="button" class="danger" data-action="del" data-id="${it.id}">Löschen</button>
       </div>
