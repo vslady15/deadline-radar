@@ -131,3 +131,9 @@ ol{margin:10px 0 0; color:var(--muted); font-size:13px; line-height:1.5}
 
 .foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .muted{color:var(--muted)}
+
+form.editing {
+  border: 1px solid rgba(110,231,255,.45);
+  box-shadow: 0 0 0 3px rgba(110,231,255,.12);
+  border-radius: 18px;
+}
