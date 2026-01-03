@@ -2,11 +2,14 @@
    - Speichert lokal (localStorage)
    - Sortiert Deadlines
    - Exportiert alle Einträge als ICS-Kalenderdatei
+   - Editieren von Einträgen (NEU)
 */
 
 const STORAGE_KEY = "deadline_radar_v1";
 
 const form = document.getElementById("deadlineForm");
+const formTitleEl = document.getElementById("formTitle");
+
 const titleEl = document.getElementById("title");
 const categoryEl = document.getElementById("category");
 const dueDateEl = document.getElementById("dueDate");
@@ -19,6 +22,9 @@ const statsEl = document.getElementById("stats");
 const exportIcsBtn = document.getElementById("exportIcsBtn");
 const clearAllBtn = document.getElementById("clearAllBtn");
 const demoBtn = document.getElementById("demoBtn");
+
+// Edit state
+let editingId = null;
 
 function loadItems() {
   try {
@@ -40,13 +46,11 @@ function uid() {
 }
 
 function toISODate(d) {
-  // yyyy-mm-dd
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function parseISODate(s) {
-  // Treat as local date
   const [y, m, d] = s.split("-").map(Number);
   return new Date(y, (m || 1) - 1, d || 1);
 }
@@ -75,7 +79,7 @@ function render() {
 
   if (items.length === 0) {
     statsEl.textContent = "Noch keine Fristen gespeichert.";
-    listEl.innerHTML = `<div class="hint">Füge rechts eine Frist hinzu. Danach kannst du alles als Kalenderdatei (ICS) exportieren.</div>`;
+    listEl.innerHTML = `<div class="hint">Füge links eine Frist hinzu. Danach kannst du alles als Kalenderdatei (ICS) exportieren.</div>`;
     return;
   }
 
@@ -109,7 +113,8 @@ function render() {
       ${it.note ? `<div class="note">${escapeHtml(it.note)}</div>` : ""}
 
       <div class="itemActions">
-        <button type="button" class="secondary" data-action="ics" data-id="${it.id}">ICS für diese Frist</button>
+        <button type="button" class="secondary" data-action="edit" data-id="${it.id}">Bearbeiten</button>
+        <button type="button" class="secondary" data-action="ics" data-id="${it.id}">ICS</button>
         <button type="button" class="danger" data-action="del" data-id="${it.id}">Löschen</button>
       </div>
     `;
@@ -135,6 +140,59 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
+// ---------- Edit UI helpers ----------
+
+function enterEditMode(item) {
+  editingId = item.id;
+
+  formTitleEl.textContent = "Frist bearbeiten";
+  titleEl.value = item.title;
+  categoryEl.value = item.category;
+  dueDateEl.value = item.dueDate;
+  leadDaysEl.value = String(item.leadDays ?? 7);
+  noteEl.value = item.note ?? "";
+
+  // Add/ensure cancel button
+  ensureCancelButton();
+
+  // Scroll form into view nicely
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function exitEditMode() {
+  editingId = null;
+  formTitleEl.textContent = "Neue Frist";
+  form.reset();
+  leadDaysEl.value = "7";
+  removeCancelButton();
+}
+
+function ensureCancelButton() {
+  // Add a cancel button next to existing submit + demo buttons
+  const actions = form.querySelector(".actions");
+  if (!actions) return;
+
+  let cancelBtn = document.getElementById("cancelEditBtn");
+  if (cancelBtn) return;
+
+  cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.id = "cancelEditBtn";
+  cancelBtn.className = "secondary";
+  cancelBtn.textContent = "Abbrechen";
+
+  cancelBtn.addEventListener("click", () => exitEditMode());
+
+  actions.appendChild(cancelBtn);
+}
+
+function removeCancelButton() {
+  const cancelBtn = document.getElementById("cancelEditBtn");
+  if (cancelBtn) cancelBtn.remove();
+}
+
+// ---------- Form submit (add or update) ----------
+
 form.addEventListener("submit", (e) => {
   e.preventDefault();
 
@@ -147,6 +205,27 @@ form.addEventListener("submit", (e) => {
   if (!title || !dueDate) return;
 
   const items = loadItems();
+
+  if (editingId) {
+    const idx = items.findIndex((x) => x.id === editingId);
+    if (idx !== -1) {
+      items[idx] = {
+        ...items[idx],
+        title,
+        category,
+        dueDate,
+        leadDays,
+        note
+      };
+      saveItems(items);
+      exitEditMode();
+      render();
+      return;
+    }
+    // Fallback: if ID not found, exit edit mode and add new
+    exitEditMode();
+  }
+
   items.push({
     id: uid(),
     title,
@@ -162,9 +241,12 @@ form.addEventListener("submit", (e) => {
   render();
 });
 
+// ---------- List actions ----------
+
 listEl.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
   if (!btn) return;
+
   const action = btn.dataset.action;
   const id = btn.dataset.id;
   if (!action || !id) return;
@@ -175,18 +257,30 @@ listEl.addEventListener("click", (e) => {
 
   if (action === "del") {
     if (!confirm("Diese Frist wirklich löschen?")) return;
+
+    const wasEditingThis = editingId === id;
+
     items.splice(idx, 1);
     saveItems(items);
+
+    if (wasEditingThis) exitEditMode();
+
     render();
     return;
   }
 
+  if (action === "edit") {
+    enterEditMode(items[idx]);
+    return;
+  }
+
   if (action === "ics") {
-    const it = items[idx];
-    downloadICS([it], "deadline-radar-single.ics");
+    downloadICS([items[idx]], "deadline-radar-single.ics");
     return;
   }
 });
+
+// ---------- Export / Clear / Demo ----------
 
 exportIcsBtn.addEventListener("click", () => {
   const items = sortItems(loadItems());
@@ -202,6 +296,7 @@ clearAllBtn.addEventListener("click", () => {
   if (items.length === 0) return;
   if (!confirm("Wirklich ALLES löschen? (Kann nicht rückgängig gemacht werden)")) return;
   localStorage.removeItem(STORAGE_KEY);
+  exitEditMode();
   render();
 });
 
@@ -234,6 +329,7 @@ demoBtn.addEventListener("click", () => {
     }
   ];
   saveItems(demo);
+  exitEditMode();
   render();
 });
 
@@ -255,9 +351,6 @@ function downloadICS(items, filename) {
 }
 
 function buildICS(items) {
-  // Wir erstellen pro Eintrag 2 Events:
-  // 1) Erinnerung (leadDays vorher)
-  // 2) Stichtag (am dueDate)
   const now = new Date();
   const dtstamp = toICSDateTime(now);
 
@@ -273,11 +366,9 @@ function buildICS(items) {
     const lead = Number(it.leadDays || 0);
     const remind = addDays(due, -lead);
 
-    // All-day events: DTSTART;VALUE=DATE:YYYYMMDD
     const dueDate = toICSDate(due);
     const remindDate = toICSDate(remind);
 
-    // Reminder event
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${sanitizeICS(`${it.id}-remind@deadline-radar`)}`);
     lines.push(`DTSTAMP:${dtstamp}`);
@@ -287,7 +378,6 @@ function buildICS(items) {
     lines.push(`DTEND;VALUE=DATE:${remindDate}`);
     lines.push("END:VEVENT");
 
-    // Due event
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${sanitizeICS(`${it.id}-due@deadline-radar`)}`);
     lines.push(`DTSTAMP:${dtstamp}`);
@@ -313,32 +403,4 @@ function buildDescription(it, isReminder) {
 }
 
 function toICSDate(d) {
-  // YYYYMMDD
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-}
-
-function toICSDateTime(d) {
-  // UTC datetime: YYYYMMDDTHHMMSSZ
-  const pad = (n) => String(n).padStart(2, "0");
-  const yyyy = d.getUTCFullYear();
-  const mm = pad(d.getUTCMonth() + 1);
-  const dd = pad(d.getUTCDate());
-  const hh = pad(d.getUTCHours());
-  const mi = pad(d.getUTCMinutes());
-  const ss = pad(d.getUTCSeconds());
-  return `${yyyy}${mm}${dd}T${hh}${mi}${ss}Z`;
-}
-
-function sanitizeICS(s) {
-  // Escape commas, semicolons, backslashes, and newlines per RFC-ish expectations
-  return String(s)
-    .replaceAll("\\", "\\\\")
-    .replaceAll("\n", "\\n")
-    .replaceAll("\r", "")
-    .replaceAll(",", "\\,")
-    .replaceAll(";", "\\;");
-}
-
-// Initial render
-render();
+  const pad = (n) => String(n
