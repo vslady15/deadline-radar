@@ -158,6 +158,7 @@ function enterEditMode(item) {
 
   // Scroll form into view nicely
   form.scrollIntoView({ behavior: "smooth", block: "start" });
+   submitBtn.textContent = "Änderungen speichern";
 }
 
 function exitEditMode() {
