@@ -8,6 +8,7 @@
 const STORAGE_KEY = "deadline_radar_v1";
 
 const form = document.getElementById("deadlineForm");
+const submitBtn = form.querySelector('button[type="submit"]');
 const formTitleEl = document.getElementById("formTitle");
 
 const titleEl = document.getElementById("title");
