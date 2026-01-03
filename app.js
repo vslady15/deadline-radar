@@ -146,6 +146,7 @@ function escapeHtml(str) {
 function enterEditMode(item) {
   editingId = item.id;
 
+  form.classList.add("editing");
   formTitleEl.textContent = "Frist bearbeiten";
   titleEl.value = item.title;
   categoryEl.value = item.category;
@@ -163,6 +164,7 @@ function enterEditMode(item) {
 
 function exitEditMode() {
   editingId = null;
+  form.classList.remove("editing");
   formTitleEl.textContent = "Neue Frist";
   form.reset();
   leadDaysEl.value = "7";
