@@ -1,8 +1,8 @@
-/* Deadline Radar – 0€ Web-App
+/* Deadline Radar
    - Speichert lokal (localStorage)
    - Sortiert Deadlines
    - Exportiert alle Einträge als ICS-Kalenderdatei
-   - Editieren von Einträgen (NEU)
+   - Editieren von Einträgen
 */
 
 const STORAGE_KEY = "deadline_radar_v1";
