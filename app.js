@@ -167,6 +167,7 @@ function exitEditMode() {
   form.reset();
   leadDaysEl.value = "7";
   removeCancelButton();
+   submitBtn.textContent = "Frist speichern";
 }
 
 function ensureCancelButton() {
